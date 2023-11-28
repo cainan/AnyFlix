@@ -1,7 +1,6 @@
 package br.com.alura.anyflix
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -30,7 +29,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -44,7 +42,6 @@ import br.com.alura.anyflix.ui.components.AnyflixBottomAppBar
 import br.com.alura.anyflix.ui.components.BottomAppBarItem
 import br.com.alura.anyflix.ui.theme.AnyFlixTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -55,11 +52,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        lifecycleScope.launch {
-            val movies = service.findAll()
-            Log.i("MainActivity", "onCreate: $movies")
-        }
 
         setContent {
             AnyFlixTheme {
@@ -77,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AnyflixApp(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
 ) {
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStack?.destination
@@ -117,9 +109,11 @@ fun AnyflixApp(
                 myListRoute -> {
                     Text("Minha lista")
                 }
+
                 movieDetailsRouteFullpath -> {
                     Text("Informações")
                 }
+
                 homeRoute -> {
                     Image(
                         painterResource(id = R.drawable.anyflix),
@@ -149,7 +143,7 @@ fun AnyflixApp(
     isShowBottomAppBar: Boolean = false,
     topAppBarTitle: @Composable () -> Unit = {},
     onBackNavigationClick: () -> Unit = {},
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Scaffold(
         topBar = {
