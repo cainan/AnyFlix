@@ -56,10 +56,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        lifecycleScope.launch {
-//            val movies = service.findAll()
-//            Log.i("MainActivity", "onCreate: $movies")
-//        }
+        lifecycleScope.launch {
+            val movies = service.findAll()
+            Log.i("MainActivity", "onCreate: $movies")
+        }
 
         setContent {
             AnyFlixTheme {
