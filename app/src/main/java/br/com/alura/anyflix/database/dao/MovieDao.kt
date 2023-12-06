@@ -32,4 +32,6 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE inMyList = 0 and id != :id")
     fun suggestedMovies(id: String): Flow<List<Movie>>
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveAll(vararg movie: MovieEntity)
 }
