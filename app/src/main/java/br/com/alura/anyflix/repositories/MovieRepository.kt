@@ -1,14 +1,17 @@
 package br.com.alura.anyflix.repositories
 
+import android.util.Log
 import br.com.alura.anyflix.database.dao.MovieDao
 import br.com.alura.anyflix.database.entities.toMovie
 import br.com.alura.anyflix.model.Movie
+import br.com.alura.anyflix.model.toMovieEntity
 import br.com.alura.anyflix.network.services.MovieService
 import br.com.alura.anyflix.network.services.toMovieEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.net.ConnectException
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
 
@@ -20,9 +23,13 @@ class MovieRepository @Inject constructor(
     suspend fun findSections(): Flow<Map<String, List<Movie>>> {
 
         CoroutineScope(coroutineContext).launch {
-            val response = service.findAll()
-            val entities = response.map { it.toMovieEntity() }
-            dao.saveAll(*entities.toTypedArray())
+            try {
+                val response = service.findAll()
+                val entities = response.map { it.toMovieEntity() }
+                dao.saveAll(*entities.toTypedArray())
+            } catch (e: ConnectException) {
+                Log.e("MovieRepository", "findSections: Falha ao conectar na API")
+            }
         }
 
         return dao.findAll().map { entities ->
@@ -40,4 +47,62 @@ class MovieRepository @Inject constructor(
         "Novidades" to movies.shuffled().take(7),
         "Continue assistindo" to movies.shuffled().take(7)
     )
+
+    suspend fun myList(): Flow<List<Movie>> {
+
+        CoroutineScope(coroutineContext).launch {
+            try {
+                val response = service.myList()
+                val entities = response.map { it.toMovieEntity() }
+                dao.saveAll(*entities.toTypedArray())
+            } catch (e: ConnectException) {
+                Log.e("MovieRepository", "myList: Falha ao conectar na API")
+            }
+        }
+
+        return dao.myList().map { entities -> entities.map { it.toMovie() } }
+    }
+
+    suspend fun findMovieById(id: String): Flow<Movie> {
+
+        CoroutineScope(coroutineContext).launch {
+            try {
+                val response = service.findMovieById(id)
+                val entity = response.toMovieEntity()
+                dao.save(entity)
+            } catch (e: ConnectException) {
+                Log.e("MovieRepository", "findMovieById: Falha ao conectar na API")
+            }
+        }
+
+        return dao.findMovieById(id).map {
+            it.toMovie()
+        }
+    }
+
+    fun suggestedMovies(id: String): Flow<List<Movie>> {
+        return dao.suggestedMovies(id)
+    }
+
+    suspend fun addToMyList(id: String) {
+        CoroutineScope(coroutineContext).launch {
+            try {
+                service.addToMyList(id)
+                dao.addToMyList(id)
+            } catch (e: ConnectException) {
+                Log.e("MovieRepository", "addToMyList: Falha ao conectar na API")
+            }
+        }
+    }
+
+    suspend fun removeFromMyList(id: String) {
+        CoroutineScope(coroutineContext).launch {
+            try {
+                service.removeFromMyList(id)
+                dao.removeFromMyList(id)
+            } catch (e: ConnectException) {
+                Log.e("MovieRepository", "removeFromMyList: Falha ao conectar na API")
+            }
+        }
+    }
 }

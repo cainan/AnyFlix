@@ -3,10 +3,9 @@ package br.com.alura.anyflix.ui.viewmodels
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import br.com.alura.anyflix.database.dao.MovieDao
-import br.com.alura.anyflix.database.entities.toMovie
 import br.com.alura.anyflix.model.Movie
 import br.com.alura.anyflix.navigation.movieIdArgument
+import br.com.alura.anyflix.repositories.MovieRepository
 import br.com.alura.anyflix.ui.uistates.MovieDetailsUiState
 import br.com.alura.anyflix.ui.uistates.MovieDetailsUiState.Success
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MovieDetailsViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    private val dao: MovieDao
+    private val movieRepository: MovieRepository,
 ) : ViewModel() {
     private var currentUiStateJob: Job? = null
 
@@ -36,16 +35,14 @@ class MovieDetailsViewModel @Inject constructor(
     private fun loadUiState() {
         currentUiStateJob?.cancel()
         currentUiStateJob = viewModelScope.launch {
-            dao.findMovieById(
+            movieRepository.findMovieById(
                 requireNotNull(
                     savedStateHandle[movieIdArgument]
                 )
             ).onStart {
                 _uiState.update { MovieDetailsUiState.Loading }
-            }.map {
-                it.toMovie()
             }.flatMapLatest { movie ->
-                dao.suggestedMovies(movie.id)
+                movieRepository.suggestedMovies(movie.id)
                     .map { suggestedMovies ->
                         Success(
                             movie = movie,
@@ -59,11 +56,11 @@ class MovieDetailsViewModel @Inject constructor(
     }
 
     suspend fun addToMyList(movie: Movie) {
-        dao.addToMyList(movie.id)
+        movieRepository.addToMyList(movie.id)
     }
 
     suspend fun removeFromMyList(movie: Movie) {
-        dao.removeFromMyList(movie.id)
+        movieRepository.removeFromMyList(movie.id)
     }
 
     fun loadMovie() {
